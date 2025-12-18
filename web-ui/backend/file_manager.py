@@ -32,6 +32,8 @@ class FileManager:
     def _init_metadata_file(self):
         """初始化元数据文件"""
         if not self.metadata_file.exists():
+            # 确保父目录存在
+            self.metadata_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self.metadata_file, 'w', encoding='utf-8') as f:
                 json.dump({}, f, ensure_ascii=False, indent=2)
     
@@ -269,4 +271,7 @@ class FileManager:
             raise ValueError(f"DOCX文件读取失败: {str(e)}")
 
 # 全局文件管理器实例
-file_manager = FileManager() 
+file_manager = FileManager(
+    storage_dir="uploads",
+    metadata_file="metadata/file_metadata.json"
+) 

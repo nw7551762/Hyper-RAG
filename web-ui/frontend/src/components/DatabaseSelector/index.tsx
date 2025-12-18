@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { Select, Typography, Space, Button, message, Spin } from 'antd';
+import { Select, Typography, Space, Button, message, Spin, Popconfirm } from 'antd';
 import type { SizeType } from 'antd/es/config-provider/SizeContext';
 import { observer } from 'mobx-react';
-import { DatabaseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { storeGlobalUser } from '../../store/globalUser';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,8 @@ interface DatabaseSelectorProps {
   showCurrent?: boolean;
   /** 是否显示刷新按钮 */
   showRefresh?: boolean;
+  /** 是否显示删除按钮 */
+  showDelete?: boolean;
   /** 选择器占位文本 */
   placeholder?: string;
   /** 自定义样式 */
@@ -31,10 +33,11 @@ interface DatabaseSelectorProps {
 /**
  * 数据库选择组件
  */
-const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
+export const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
     mode = 'select',
     showCurrent = true,
     showRefresh = false,
+    showDelete = false,
     placeholder,
     style = {},
     size = 'middle',
@@ -72,6 +75,16 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
         }
     };
 
+    // 删除数据库
+    const handleDelete = async (databaseName: string) => {
+        const success = await storeGlobalUser.deleteDatabase(databaseName);
+        if (success) {
+            message.success(t('database.delete_success'));
+        } else {
+            message.error(t('database.delete_failed'));
+        }
+    };
+
     // 选择器模式
     const renderSelectMode = () => (
         <Space size="middle" style={style}>
@@ -95,7 +108,7 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
                                     onClick={handleRefresh}
                                     style={{ width: '100%' }}
                                 >
-                                    刷新列表
+                                    {t('database.refresh_list')}
                                 </Button>
                             </div>
                         )}
@@ -104,11 +117,31 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
             >
                 {storeGlobalUser.availableDatabases.map((db) => (
                     <Option key={db.name} value={db.name}>
-                        <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <DatabaseOutlined style={{ marginRight: 6, color: '#1890ff' }} />
                                 {db.description}
                             </div>
+                            {showDelete && (
+                                <Popconfirm
+                                    title={`${t('database.confirm_delete_db')} "${db.name}"?`}
+                                    onConfirm={(e) => {
+                                        e.stopPropagation();
+                                        handleDelete(db.name);
+                                    }}
+                                    onCancel={(e) => e.stopPropagation()}
+                                    okText={t('database.confirm')}
+                                    cancelText={t('database.cancel')}
+                                >
+                                    <Button
+                                        type="text"
+                                        danger
+                                        size="small"
+                                        icon={<DeleteOutlined />}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                </Popconfirm>
+                            )}
                         </div>
                     </Option>
                 ))}
@@ -202,5 +235,3 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
             return renderSelectMode();
     }
 };
-
-export default observer(DatabaseSelector);

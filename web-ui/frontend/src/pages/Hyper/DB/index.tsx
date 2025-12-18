@@ -31,7 +31,7 @@ import {
 import { observer } from 'mobx-react';
 import { useTranslation } from 'react-i18next';
 import { storeGlobalUser } from '../../../store/globalUser';
-import DatabaseSelector from '../../../components/DatabaseSelector';
+import { DatabaseSelector } from '../../../components/DatabaseSelector';
 import { SERVER_URL } from '../../../utils';
 
 const { Text } = Typography;
@@ -674,7 +674,7 @@ return;
                         <h3 style={{ margin: 0 }}>{t('database.title')}</h3>
                         <DatabaseSelector
                             mode="select"
-                            // showRefresh={true}
+                            showDelete={true}
                             size="middle"
                             onChange={onDatabaseChange}
                         />

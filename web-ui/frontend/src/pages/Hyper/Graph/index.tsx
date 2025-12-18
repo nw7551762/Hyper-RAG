@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import { useTranslation } from 'react-i18next';
 import { storeGlobalUser } from '../../../store/globalUser';
 import HyperGraph from '../../../components/HyperGraph';
-import DatabaseSelector from '../../../components/DatabaseSelector';
+import { DatabaseSelector } from '../../../components/DatabaseSelector';
 import { DatabaseOutlined } from '@ant-design/icons';
 import { SERVER_URL } from '../../../utils';
 

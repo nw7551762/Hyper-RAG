@@ -33,7 +33,7 @@ import {
 } from '../../components/ui'
 import { storeGlobalUser } from '../../store/globalUser'
 import { SERVER_URL } from '../../utils'
-import DatabaseSelector from '../../components/DatabaseSelector'
+import { DatabaseSelector } from '../../components/DatabaseSelector'
 import RetrievalInfo from '../../components/RetrievalInfo'
 import RetrievalHyperGraph from '../../components/RetrievalHyperGraph'
 import { conversations as defaultConversations } from './data'

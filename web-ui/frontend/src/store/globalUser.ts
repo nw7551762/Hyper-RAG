@@ -91,6 +91,30 @@ class GlobalUser {
     }
     return []
   }
+
+  // 删除数据库
+  async deleteDatabase(databaseName: string) {
+    try {
+      const response = await fetch(`${SERVER_URL}/db/clear?database=${encodeURIComponent(databaseName)}`, {
+        method: 'DELETE'
+      })
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          // 如果删除的是当前选中的数据库，则清空
+          if (this.selectedDatabase === databaseName) {
+            this.setSelectedDatabase('')
+          }
+          // 重新加载数据库列表
+          await this.loadDatabases()
+          return true
+        }
+      }
+    } catch (error) {
+      console.error('删除数据库失败:', error)
+    }
+    return false
+  }
 }
 
 export const storeGlobalUser = new GlobalUser()

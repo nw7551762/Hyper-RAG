@@ -37,7 +37,7 @@ const DocumentManager = () => {
   // 建立WebSocket连接
   const connectWebSocket = () => {
     try {
-      const wsUrl = SERVER_URL.replace('http', 'ws') + '/ws';
+      const wsUrl = '/ws';
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {

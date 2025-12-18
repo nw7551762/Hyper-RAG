@@ -1,3 +1,4 @@
+import React from 'react';
 import NotFoundPage from '@/404'
 import App from '@/App'
 import ErrorPage from '@/ErrorPage'

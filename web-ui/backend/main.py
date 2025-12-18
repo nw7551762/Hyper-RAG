@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail, db_manager
+from db import get_hypergraph, getFrequentVertices, get_vertices, get_hyperedges, get_vertice, get_vertice_neighbor, get_hyperedge_neighbor_server, add_vertex, add_hyperedge, delete_vertex, delete_hyperedge, update_vertex, update_hyperedge, get_hyperedge_detail, db_manager, clear_graph_data
 from file_manager import file_manager
 import json
 import os
@@ -35,7 +35,18 @@ except ImportError as e:
 # 设置文件路径
 SETTINGS_FILE = "settings.json"
 
-app = FastAPI()
+# 检查是否在生产环境（Docker）中运行
+# 在生产环境中，应用运行在 nginx 的 /api 路径下
+PRODUCTION_MODE = os.environ.get("PRODUCTION_MODE", "false").lower() == "true"
+
+# 配置 FastAPI 应用
+# root_path: 告诉 FastAPI 它运行在反向代理的哪个路径下
+# 这样 Swagger UI 会自动在所有请求前加上 /api 前缀
+app = FastAPI(
+    root_path="/api" if PRODUCTION_MODE else "",
+    title="Hyper-RAG API",
+    description="Hypergraph-driven Retrieval-Augmented Generation API"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -245,6 +256,20 @@ async def delete_hyperedge_endpoint(hyperedge_id: str, database: str = None):
         vertices = hyperedge_id.split("|*|")
         result = delete_hyperedge(vertices, database)
         return {"success": True, "message": "Hyperedge deleted successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.delete("/db/clear")
+async def clear_database_endpoint(database: str = None):
+    """
+    清除图数据
+    """
+    try:
+        result = clear_graph_data(database)
+        if result:
+            return {"success": True, "message": f"Database '{database}' cleared successfully"}
+        else:
+            return {"success": False, "message": f"Database '{database}' not found"}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
@@ -521,9 +546,15 @@ def get_or_create_hyperrag(database: str = None):
         main_logger.info(f"HyperRAG工作目录: {db_working_dir}")
         with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
             settings = json.load(f)
-            
-        embedding_dim = settings.get("embeddingDim")
-        
+
+        # 获取嵌入维度，如果未配置则使用默认值 1536 (text-embedding-3-small)
+        embedding_dim = settings.get("embeddingDim", 1536)
+        if embedding_dim is None:
+            embedding_dim = 1536
+            main_logger.warning(f"embeddingDim 未配置，使用默认值: {embedding_dim}")
+
+        main_logger.info(f"使用嵌入维度: {embedding_dim}")
+
         # 初始化 HyperRAG 实例
         hyperrag_instances[database] = HyperRAG(
             working_dir=db_working_dir,
@@ -1255,9 +1286,12 @@ async def process_files_with_progress(request: FileEmbedRequest, total_files: in
                 
             except Exception as e:
                 # 更新文件状态为错误
+                import traceback
                 error_msg = f"文件处理失败: {file_id}, 错误: {str(e)}"
                 print(f"❌ {error_msg}")
+                print(f"完整錯誤追蹤:\n{traceback.format_exc()}")
                 main_logger.error(error_msg)
+                main_logger.error(f"完整錯誤追蹤:\n{traceback.format_exc()}")
                 file_manager.update_file_status(file_id, "error", str(e))
                 
                 # 发送错误进度更新

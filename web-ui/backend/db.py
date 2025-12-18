@@ -45,8 +45,29 @@ class DatabaseManager:
                 
         return databases
 
+    def delete_database(self, database_name):
+        """删除数据库实例和文件"""
+        if database_name in self.databases:
+            # 关闭并删除实例
+            del self.databases[database_name]
+
+        # 构建并删除数据库文件
+        database_path = os.path.join(self.cache_dir, database_name)
+        if os.path.exists(database_path):
+            import shutil
+            shutil.rmtree(database_path)
+            return True
+        return False
+
 # 全局数据库管理器实例
 db_manager = DatabaseManager()
+
+def clear_graph_data(database_name=None):
+    """清除图数据"""
+    if database_name is None:
+        raise Exception("Database name must be provided")
+    
+    return db_manager.delete_database(database_name)
 
 # 为了向后兼容，保留原有的hg变量
 hg = db_manager.get_database()

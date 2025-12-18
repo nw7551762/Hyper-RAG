@@ -13,3 +13,4 @@ websockets
 aiofiles
 PyPDF2
 docx2txt
+pycryptodome

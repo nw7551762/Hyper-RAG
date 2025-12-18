@@ -277,13 +277,14 @@ async def _merge_nodes_then_upsert(
         already_description.append(already_node["description"])
         already_additional_properties.append(already_node["additional_properties"])
 
-    entity_type = sorted(
+    entity_type_counts = sorted(
         Counter(
             [dp["entity_type"] for dp in nodes_data] + already_entity_types
         ).items(),
         key=lambda x: x[1],
         reverse=True,
-    )[0][0]
+    )
+    entity_type = entity_type_counts[0][0] if entity_type_counts else "UNKNOWN"
     # """------------------------------------------------------------------"""
     # for node in nodes_data:
     #     if node["entity_type"] is None:
@@ -418,7 +419,7 @@ async def extract_entities(
         record_delimiter=PROMPTS["DEFAULT_RECORD_DELIMITER"],
         completion_delimiter=PROMPTS["DEFAULT_COMPLETION_DELIMITER"]
     )
-    example_prompt = PROMPTS["entity_extraction_examples"][3]
+    example_prompt = PROMPTS["entity_extraction_examples"][0]
     example_str = example_prompt.format(**example_base)
 
     context_base = dict(
@@ -1100,7 +1101,7 @@ async def hyper_query(
             relation_keywords = ", ".join(relation_keywords)
             entity_keywords = ", ".join(entity_keywords)
         # Handle parsing error
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, IndexError) as e:
             print(f"JSON parsing error: {e}")
             return PROMPTS["fail_response"]
     """
@@ -1213,7 +1214,7 @@ async def hyper_query_lite(
             entity_keywords = keywords_data.get("low_level_keywords", [])
             entity_keywords = ", ".join(entity_keywords)
         # Handle parsing error
-        except json.JSONDecodeError as e:
+        except (json.JSONDecodeError, IndexError) as e:
             print(f"JSON parsing error: {e}")
             return PROMPTS["fail_response"]
     """
